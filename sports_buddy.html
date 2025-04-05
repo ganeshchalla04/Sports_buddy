@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sports Buddy</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #3a3a3a;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input, button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #entries {
+      margin-top: 30px;
+    }
+    ul#matchesList {
+      list-style-type: none;
+      padding: 0;
+    }
+    ul#matchesList li {
+      background: #f1f1f1;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-left: 5px solid #4CAF50;
+      border-radius: 8px;
+    }
+  </style>
+  <script type="module" src="app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Sports Buddy</h1>
+    <form id="sportsForm">
+      <input type="text" id="username" placeholder="Your Name" required />
+      <input type="text" id="sport" placeholder="Sport (e.g. Tennis)" required />
+      <input type="text" id="level" placeholder="Skill Level (e.g. Beginner)" required />
+      <input type="text" id="location" placeholder="Location" required />
+      <input type="datetime-local" id="time" required />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="entries">
+      <h2>Nearby Sports Matches</h2>
+      <ul id="matchesList"></ul>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const form = document.getElementById("sportsForm");
+    const matchesList = document.getElementById("matchesList");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        username: form.username.value,
+        sport: form.sport.value,
+        level: form.level.value,
+        location: form.location.value,
+        time: form.time.value
+      };
+
+      await db.collection("matches").add(data);
+      form.reset();
+      loadMatches();
+    });
+
+    async function loadMatches() {
+      matchesList.innerHTML = "";
+      const snapshot = await db.collection("matches").orderBy("time").get();
+      snapshot.forEach(doc => {
+        const match = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${match.username} is playing ${match.sport} (${match.level}) at ${match.location} on ${new Date(match.time).toLocaleString()}`;
+        matchesList.appendChild(li);
+      });
+    }
+
+    loadMatches();
+  </script>
+</body>
+</html>
